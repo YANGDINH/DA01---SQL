@@ -1,7 +1,7 @@
 /* Bước 1: Phân tích yêu cầu
 1. output (gốc/phái sinh): candidate_id
 2. input
-3. điều kiện lọc theo trường nào (gốc hay phái sinh)
+3. điều kiện lọc theo trường nào (gốc hay phái sinh) */
 
 --EX1
 SELECT DISTINCT CITY FROM STATION
