@@ -95,3 +95,46 @@ AND a.manager_id IS NOT NULL
 AND b.employee_id IS NULL
 ORDER BY a.employee_id;
 --EX10
+SELECT COUNT(DISTINCT company_id) AS duplicate_companies
+FROM (SELECT company_id, title, description
+FROM job_listings
+GROUP BY company_id, title, description
+HAVING COUNT(*)>1) AS duplicate_jobs
+--EX11
+WITH TopUser 
+AS (
+SELECT a.name
+FROM Users AS a
+JOIN MovieRating AS b ON a.user_id = b.user_id
+GROUP BY a.user_id, a.name
+ORDER BY COUNT(b.movie_id) DESC, a.name
+LIMIT 1),
+TopMovie AS (
+SELECT c.title
+FROM Movies AS c
+JOIN MovieRating AS b ON c.movie_id = b.movie_id
+WHERE b.created_at BETWEEN '2020-02-01' AND '2020-02-29'
+GROUP BY c.movie_id, c.title
+ORDER BY AVG(b.rating) DESC, c.title
+LIMIT 1)
+SELECT (SELECT name FROM TopUser) AS results
+UNION ALL
+SELECT (SELECT title FROM TopMovie) AS results;
+--EX12
+WITH FriendCount 
+AS (
+SELECT requester_id AS id
+FROM RequestAccepted
+UNION ALL
+SELECT accepter_id AS id
+FROM RequestAccepted), 
+Friends 
+AS (
+SELECT id, 
+COUNT(*) AS num
+FROM FriendCount
+GROUP BY id)
+SELECT id, num
+FROM Friends
+ORDER BY num DESC
+LIMIT 1;
