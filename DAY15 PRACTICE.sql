@@ -75,4 +75,49 @@ SELECT
   tweet_date,
  ROUND(AVG(tweet_count) OVER (PARTITION BY user_id ORDER BY tweet_date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW),2) AS rolling_avg_3d
 FROM tweets;
---EX6
+--EX6 
+/* EPOCH được sử dụng để chuyển đổi khoảng thời gian giữa hai thời điểm thành số giây. 
+Ở đây, câu lệnh EXTRACT(EPOCH FROM ...), trong đó ... là biểu thức tính toán khoảng thời gian, sẽ trả về số giây giữa hai thời điểm. */
+WITH payments AS (
+  SELECT 
+  merchant_id, 
+  EXTRACT(EPOCH FROM 
+  transaction_timestamp - LAG(transaction_timestamp) 
+  OVER(PARTITION BY merchant_id, credit_card_id, amount 
+  ORDER BY transaction_timestamp)
+    )/60 AS minute_difference 
+  FROM transactions) 
+
+SELECT COUNT(merchant_id) AS payment_count
+FROM payments 
+WHERE minute_difference <= 10
+--EX7
+SELECT 
+  category, 
+  product, 
+  total_spend 
+FROM 
+(SELECT category, 
+    product, 
+    SUM(spend) AS total_spend,
+    RANK() OVER (PARTITION BY category ORDER BY SUM(spend) DESC) AS ranking 
+  FROM product_spend
+  WHERE EXTRACT(YEAR FROM transaction_date) = 2022
+  GROUP BY category, product
+) AS ranked_spending
+WHERE ranking <= 2 
+ORDER BY category, ranking;
+--EX8
+WITH top_10 AS (
+SELECT 
+artists.artist_name,
+DENSE_RANK() OVER (ORDER BY COUNT(songs.song_id) DESC) AS artist_rank
+FROM artists
+INNER JOIN songs ON artists.artist_id = songs.artist_id
+INNER JOIN global_song_rank AS ranking ON songs.song_id = ranking.song_id
+WHERE ranking.rank <= 10
+GROUP BY artists.artist_name
+)
+SELECT artist_name, artist_rank
+FROM top_10
+WHERE artist_rank <= 5;
